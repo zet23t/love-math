@@ -1,5 +1,5 @@
 local clamp = require "love-math.clamp"
-local dot = require "love-math.dot"
+local dot = require "love-math.geom.2d.dot"
 
 return function(px, py, p0x, p0y, p1x, p1y, p2x, p2y)
 	--  signed distance to a 2D triangle
