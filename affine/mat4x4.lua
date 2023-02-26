@@ -1,5 +1,8 @@
+---@class mat4x4 A 4x4 matrix for affine transformations
 local mat4x4 = {}
 mat4x4._mt = { __index = mat4x4 }
+
+---@return mat4x4
 function mat4x4:new()
 	return setmetatable({
 		1, 0, 0, 0,
@@ -9,8 +12,59 @@ function mat4x4:new()
 	}, self._mt)
 end
 
+---@return mat4x4
+function mat4x4:identity()
+	self[1], self[2], self[3], self[4],
+	self[5], self[6], self[7], self[8],
+	self[9], self[10], self[11], self[12],
+	self[13], self[14], self[15], self[16] =
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	return self
+end
+
+---@return mat4x4
 function mat4x4:clone()
 	return setmetatable({ unpack(self) }, self._mt)
+end
+
+function mat4x4:get_x(s)
+	s = s or 1
+	return self[1] * s, self[5] * s, self[9] * s
+end
+
+function mat4x4:get_y(s)
+	s = s or 1
+	return self[2] * s, self[6] * s, self[10] * s
+end
+
+function mat4x4:get_z(s)
+	s = s or 1
+	return self[3] * s, self[7] * s, self[11] * s
+end
+
+function mat4x4:get_row_z(s)
+	s = s or 1
+	return self[9] * s, self[10] * s, self[11] * s
+end
+
+function mat4x4:get_translate(s)
+	s = s or 1
+	return self[4] * s, self[8] * s, self[12] * s
+end
+
+function mat4x4:copy(m)
+	self[1], self[2], self[3], self[4],
+	self[5], self[6], self[7], self[8],
+	self[9], self[10], self[11], self[12],
+	self[13], self[14], self[15], self[16] =
+		m[1], m[2], m[3], m[4],
+		m[5], m[6], m[7], m[8],
+		m[9], m[10], m[11], m[12],
+		m[13], m[14], m[15], m[16]
+	return self
 end
 
 function mat4x4:translate(x, y, z)
@@ -20,6 +74,16 @@ function mat4x4:translate(x, y, z)
 	self[4] = self[4] + x
 	self[8] = self[8] + y
 	self[12] = self[12] + z
+	return self
+end
+
+function mat4x4:set_translate(x, y, z)
+	x = x or 0
+	y = y or x
+	z = z or y
+	self[4] = x
+	self[8] = y
+	self[12] = z
 	return self
 end
 
@@ -43,13 +107,12 @@ end
 function mat4x4:set_rotate_axis(radians, ax, ay, az)
 	local s, c = math.sin(radians), math.cos(radians)
 	local invc = 1.0 - c
-		local length = ax * ax + ay * ay + az * az
-		if length > 1.0001 or length < 0.9999 then
-			length = length ^ .5
-			ax,ay,az = ax / length, ay / length, az / length
-		end
-		
-	
+	local length = ax * ax + ay * ay + az * az
+	if length > 1.0001 or length < 0.9999 then
+		length = length ^ .5
+		ax, ay, az = ax / length, ay / length, az / length
+	end
+
 	local x  = ax * invc
 	local y  = ay * invc
 	local z  = az * invc
@@ -188,6 +251,10 @@ function mat4x4:multiply_left(m)
 		s41 * m14 + s42 * m24 + s43 * m34 + s44 * m44
 
 	return self
+end
+
+function mat4x4:tostring()
+	return ("%+.3f"):rep(4, " "):rep(4, "\n"):format(unpack(self))
 end
 
 return mat4x4
