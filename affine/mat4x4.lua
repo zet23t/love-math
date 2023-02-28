@@ -50,7 +50,7 @@ function mat4x4:get_row_z(s)
 	return self[9] * s, self[10] * s, self[11] * s
 end
 
-function mat4x4:get_translate(s)
+function mat4x4:get_position(s)
 	s = s or 1
 	return self[4] * s, self[8] * s, self[12] * s
 end
@@ -77,7 +77,7 @@ function mat4x4:translate(x, y, z)
 	return self
 end
 
-function mat4x4:set_translate(x, y, z)
+function mat4x4:set_position(x, y, z)
 	x = x or 0
 	y = y or x
 	z = z or y
@@ -144,34 +144,16 @@ function mat4x4:ortho(width, height, n, f)
 	return self
 end
 
-function mat4x4:perspective(fovy, aspect, near, far)
-	local
-	e11, e12, e13, e14,
-	e21, e22, e23, e24,
-	e31, e32, e33, e34,
-	e41, e42, e43, e44 =
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1
+function mat4x4:perspective(fov, aspect, near, far)
+    local top = near * math.tan(fov *math.pi / 180 /2)
+    local bottom = -1*top
+    local right = top * aspect
+    local left = -1*right
 
-	local tanhf = math.tan(math.rad(fovy) / 2)
-	local depth = (far - near)
-
-	e11 = 1 / (tanhf * aspect)
-	e22 = 1 / tanhf
-	e33 = -(far + near) / depth
-	e34 = -1
-	e43 = -(2 * far * near) / depth
-	e44 = 0
-	self[1], self[2], self[3], self[4],
-	self[5], self[6], self[7], self[8],
-	self[9], self[10], self[11], self[12],
-	self[13], self[14], self[15], self[16] =
-		e11, e12, e13, e14,
-		e21, e22, e23, e24,
-		e31, e32, e33, e34,
-		e41, e42, e43, e44
+    self[1],  self[2],  self[3],  self[4]  = 2*near/(right-left), 0, (right+left)/(right-left), 0
+    self[5],  self[6],  self[7],  self[8]  = 0, 2*near/(top-bottom), (top+bottom)/(top-bottom), 0
+    self[9],  self[10], self[11], self[12] = 0, 0, -1*(far+near)/(far-near), -2*far*near/(far-near)
+    self[13], self[14], self[15], self[16] = 0, 0, -1, 0
 	return self
 end
 
@@ -251,6 +233,14 @@ function mat4x4:multiply_left(m)
 		s41 * m14 + s42 * m24 + s43 * m34 + s44 * m44
 
 	return self
+end
+
+function mat4x4:multiply_point(x,y,z)
+	local w = self[13] * x + self[14] * y + self[15] * z + self[16]
+	return (x * self[1] + y * self[4] + z * self[3] + self[4]),
+		(x * self[5] + y * self[6] + z * self[7] + self[8]),
+		(x * self[9] + y * self[10] + z * self[11] + self[12]),
+		w
 end
 
 function mat4x4:tostring()
