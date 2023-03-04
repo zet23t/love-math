@@ -12,6 +12,8 @@ function mat4x4:new()
 	}, self._mt)
 end
 
+local m_tmp = mat4x4:new()
+
 ---@return mat4x4
 function mat4x4:identity()
 	self[1], self[2], self[3], self[4],
@@ -45,6 +47,31 @@ function mat4x4:get_z(s)
 	return self[3] * s, self[7] * s, self[11] * s
 end
 
+function mat4x4:set_z(x,y,z)
+	self[3], self[7], self[11] = x, y, z
+	return self
+end
+
+function mat4x4:set_x(x,y,z)
+	self[1], self[5], self[9] = x, y, z
+	return self
+end
+
+function mat4x4:set_y(x,y,z)
+	self[2], self[6], self[10] = x, y, z
+	return self
+end
+
+function mat4x4:get_row_x(s)
+	s = s or 1
+	return self[1] * s, self[2] * s, self[3] * s
+end
+
+function mat4x4:get_row_y(s)
+	s = s or 1
+	return self[5] * s, self[6] * s, self[7] * s
+end
+
 function mat4x4:get_row_z(s)
 	s = s or 1
 	return self[9] * s, self[10] * s, self[11] * s
@@ -53,6 +80,18 @@ end
 function mat4x4:get_position(s)
 	s = s or 1
 	return self[4] * s, self[8] * s, self[12] * s
+end
+
+function mat4x4:transpose()
+	self[1], self[2], self[3], self[4],
+	self[5], self[6], self[7], self[8],
+	self[9], self[10], self[11], self[12],
+	self[13], self[14], self[15], self[16] =
+		self[1], self[5], self[9], self[13],
+		self[2], self[6], self[10], self[14],
+		self[3], self[7], self[11], self[15],
+		self[4], self[8], self[12], self[16]
+	return self
 end
 
 function mat4x4:copy(m)
@@ -104,6 +143,12 @@ function mat4x4:set_y_rot(radians)
 	return self
 end
 
+function mat4x4:rotate_axis(radians, ax, ay, az)
+	m_tmp:identity():set_rotate_axis(radians, ax, ay, az)
+	self:multiply(m_tmp)
+	return self
+end
+
 function mat4x4:set_rotate_axis(radians, ax, ay, az)
 	local s, c = math.sin(radians), math.cos(radians)
 	local invc = 1.0 - c
@@ -145,106 +190,152 @@ function mat4x4:ortho(width, height, n, f)
 end
 
 function mat4x4:perspective(fov, aspect, near, far)
-    local top = near * math.tan(fov *math.pi / 180 /2)
-    local bottom = -1*top
-    local right = top * aspect
-    local left = -1*right
+	local top                              = near * math.tan(fov * math.pi / 180 / 2)
+	local bottom                           = -1 * top
+	local right                            = top * aspect
+	local left                             = -1 * right
 
-    self[1],  self[2],  self[3],  self[4]  = 2*near/(right-left), 0, (right+left)/(right-left), 0
-    self[5],  self[6],  self[7],  self[8]  = 0, 2*near/(top-bottom), (top+bottom)/(top-bottom), 0
-    self[9],  self[10], self[11], self[12] = 0, 0, -1*(far+near)/(far-near), -2*far*near/(far-near)
-    self[13], self[14], self[15], self[16] = 0, 0, -1, 0
+	self[1], self[2], self[3], self[4]     = 2 * near / (right - left), 0, (right + left) / (right - left), 0
+	self[5], self[6], self[7], self[8]     = 0, 2 * near / (top - bottom), (top + bottom) / (top - bottom), 0
+	self[9], self[10], self[11], self[12]  = 0, 0, -1 * (far + near) / (far - near), -2 * far * near / (far - near)
+	self[13], self[14], self[15], self[16] = 0, 0, -1, 0
 	return self
 end
 
-function mat4x4:multiply(m)
-	local
-	s11, s12, s13, s14,
-	s21, s22, s23, s24,
-	s31, s32, s33, s34,
-	s41, s42, s43, s44 = unpack(self)
-	local
-	m11, m12, m13, m14,
-	m21, m22, m23, m24,
-	m31, m32, m33, m34,
-	m41, m42, m43, m44 = unpack(m)
-
+function mat4x4:multiply(a)
+	local b = self
 	self[1], self[2], self[3], self[4],
 	self[5], self[6], self[7], self[8],
 	self[9], self[10], self[11], self[12],
 	self[13], self[14], self[15], self[16] =
-		s11 * m11 + s12 * m21 + s13 * m31 + s14 * m41,
-		s11 * m12 + s12 * m22 + s13 * m32 + s14 * m42,
-		s11 * m13 + s12 * m23 + s13 * m33 + s14 * m43,
-		s11 * m14 + s12 * m24 + s13 * m34 + s14 * m44,
-
-		s21 * m11 + s22 * m21 + s23 * m31 + s24 * m41,
-		s21 * m12 + s22 * m22 + s23 * m32 + s24 * m42,
-		s21 * m13 + s22 * m23 + s23 * m33 + s24 * m43,
-		s21 * m14 + s22 * m24 + s23 * m34 + s24 * m44,
-
-		s31 * m11 + s32 * m21 + s33 * m31 + s34 * m41,
-		s31 * m12 + s32 * m22 + s33 * m32 + s34 * m42,
-		s31 * m13 + s32 * m23 + s33 * m33 + s34 * m43,
-		s31 * m14 + s32 * m24 + s33 * m34 + s34 * m44,
-
-		s41 * m11 + s42 * m21 + s43 * m31 + s44 * m41,
-		s41 * m12 + s42 * m22 + s43 * m32 + s44 * m42,
-		s41 * m13 + s42 * m23 + s43 * m33 + s44 * m43,
-		s41 * m14 + s42 * m24 + s43 * m34 + s44 * m44
+		b[1] * a[1] + b[2] * a[5] + b[3] * a[9] + b[4] * a[13],
+		b[1] * a[2] + b[2] * a[6] + b[3] * a[10] + b[4] * a[14],
+		b[1] * a[3] + b[2] * a[7] + b[3] * a[11] + b[4] * a[15],
+		b[1] * a[4] + b[2] * a[8] + b[3] * a[12] + b[4] * a[16],
+		b[5] * a[1] + b[6] * a[5] + b[7] * a[9] + b[8] * a[13],
+		b[5] * a[2] + b[6] * a[6] + b[7] * a[10] + b[8] * a[14],
+		b[5] * a[3] + b[6] * a[7] + b[7] * a[11] + b[8] * a[15],
+		b[5] * a[4] + b[6] * a[8] + b[7] * a[12] + b[8] * a[16],
+		b[9] * a[1] + b[10] * a[5] + b[11] * a[9] + b[12] * a[13],
+		b[9] * a[2] + b[10] * a[6] + b[11] * a[10] + b[12] * a[14],
+		b[9] * a[3] + b[10] * a[7] + b[11] * a[11] + b[12] * a[15],
+		b[9] * a[4] + b[10] * a[8] + b[11] * a[12] + b[12] * a[16],
+		b[13] * a[1] + b[14] * a[5] + b[15] * a[9] + b[16] * a[13],
+		b[13] * a[2] + b[14] * a[6] + b[15] * a[10] + b[16] * a[14],
+		b[13] * a[3] + b[14] * a[7] + b[15] * a[11] + b[16] * a[15],
+		b[13] * a[4] + b[14] * a[8] + b[15] * a[12] + b[16] * a[16]
 
 	return self
 end
 
-function mat4x4:multiply_left(m)
-	local
-	s11, s12, s13, s14,
-	s21, s22, s23, s24,
-	s31, s32, s33, s34,
-	s41, s42, s43, s44 = unpack(m)
-	local
-	m11, m12, m13, m14,
-	m21, m22, m23, m24,
-	m31, m32, m33, m34,
-	m41, m42, m43, m44 = unpack(self)
-
+function mat4x4:multiply_left(b)
+	local a = self
 	self[1], self[2], self[3], self[4],
 	self[5], self[6], self[7], self[8],
 	self[9], self[10], self[11], self[12],
 	self[13], self[14], self[15], self[16] =
-		s11 * m11 + s12 * m21 + s13 * m31 + s14 * m41,
-		s11 * m12 + s12 * m22 + s13 * m32 + s14 * m42,
-		s11 * m13 + s12 * m23 + s13 * m33 + s14 * m43,
-		s11 * m14 + s12 * m24 + s13 * m34 + s14 * m44,
-
-		s21 * m11 + s22 * m21 + s23 * m31 + s24 * m41,
-		s21 * m12 + s22 * m22 + s23 * m32 + s24 * m42,
-		s21 * m13 + s22 * m23 + s23 * m33 + s24 * m43,
-		s21 * m14 + s22 * m24 + s23 * m34 + s24 * m44,
-
-		s31 * m11 + s32 * m21 + s33 * m31 + s34 * m41,
-		s31 * m12 + s32 * m22 + s33 * m32 + s34 * m42,
-		s31 * m13 + s32 * m23 + s33 * m33 + s34 * m43,
-		s31 * m14 + s32 * m24 + s33 * m34 + s34 * m44,
-
-		s41 * m11 + s42 * m21 + s43 * m31 + s44 * m41,
-		s41 * m12 + s42 * m22 + s43 * m32 + s44 * m42,
-		s41 * m13 + s42 * m23 + s43 * m33 + s44 * m43,
-		s41 * m14 + s42 * m24 + s43 * m34 + s44 * m44
+		b[1] * a[1] + b[2] * a[5] + b[3] * a[9] + b[4] * a[13],
+		b[1] * a[2] + b[2] * a[6] + b[3] * a[10] + b[4] * a[14],
+		b[1] * a[3] + b[2] * a[7] + b[3] * a[11] + b[4] * a[15],
+		b[1] * a[4] + b[2] * a[8] + b[3] * a[12] + b[4] * a[16],
+		b[5] * a[1] + b[6] * a[5] + b[7] * a[9] + b[8] * a[13],
+		b[5] * a[2] + b[6] * a[6] + b[7] * a[10] + b[8] * a[14],
+		b[5] * a[3] + b[6] * a[7] + b[7] * a[11] + b[8] * a[15],
+		b[5] * a[4] + b[6] * a[8] + b[7] * a[12] + b[8] * a[16],
+		b[9] * a[1] + b[10] * a[5] + b[11] * a[9] + b[12] * a[13],
+		b[9] * a[2] + b[10] * a[6] + b[11] * a[10] + b[12] * a[14],
+		b[9] * a[3] + b[10] * a[7] + b[11] * a[11] + b[12] * a[15],
+		b[9] * a[4] + b[10] * a[8] + b[11] * a[12] + b[12] * a[16],
+		b[13] * a[1] + b[14] * a[5] + b[15] * a[9] + b[16] * a[13],
+		b[13] * a[2] + b[14] * a[6] + b[15] * a[10] + b[16] * a[14],
+		b[13] * a[3] + b[14] * a[7] + b[15] * a[11] + b[16] * a[15],
+		b[13] * a[4] + b[14] * a[8] + b[15] * a[12] + b[16] * a[16]
 
 	return self
 end
 
-function mat4x4:multiply_point(x,y,z)
+function mat4x4:multiply_point(x, y, z)
 	local w = self[13] * x + self[14] * y + self[15] * z + self[16]
-	return (x * self[1] + y * self[4] + z * self[3] + self[4]),
+	return (x * self[1] + y * self[2] + z * self[3] + self[4]),
 		(x * self[5] + y * self[6] + z * self[7] + self[8]),
 		(x * self[9] + y * self[10] + z * self[11] + self[12]),
 		w
 end
 
-function mat4x4:tostring()
-	return ("%+.3f"):rep(4, " "):rep(4, "\n"):format(unpack(self))
+function mat4x4:multiply_dir(x, y, z)
+	local w = self[13] * x + self[14] * y + self[15] * z + self[16]
+	return (x * self[1] + y * self[2] + z * self[3]),
+		(x * self[5] + y * self[6] + z * self[7]),
+		(x * self[9] + y * self[10] + z * self[11]),
+		w
 end
+
+local tm4 = {}
+function mat4x4:inverse()
+	local a   = self
+	tm4[1]    = a[6] * a[11] * a[16] - a[6] * a[12] * a[15] - a[10] * a[7] * a[16] + a[10] * a[8] * a[15] +
+		a[14] * a[7] * a[12] - a[14] * a[8] * a[11]
+	tm4[2]    = -a[2] * a[11] * a[16] + a[2] * a[12] * a[15] + a[10] * a[3] * a[16] - a[10] * a[4] * a[15] -
+		a[14] * a[3] * a[12] + a[14] * a[4] * a[11]
+	tm4[3]    = a[2] * a[7] * a[16] - a[2] * a[8] * a[15] - a[6] * a[3] * a[16] + a[6] * a[4] * a[15] +
+		a[14] * a[3] * a[8] - a[14] * a[4] * a[7]
+	tm4[4]    = -a[2] * a[7] * a[12] + a[2] * a[8] * a[11] + a[6] * a[3] * a[12] - a[6] * a[4] * a[11] -
+		a[10] * a[3] * a[8] + a[10] * a[4] * a[7]
+	tm4[5]    = -a[5] * a[11] * a[16] + a[5] * a[12] * a[15] + a[9] * a[7] * a[16] - a[9] * a[8] * a[15] -
+		a[13] * a[7] * a[12] + a[13] * a[8] * a[11]
+	tm4[6]    = a[1] * a[11] * a[16] - a[1] * a[12] * a[15] - a[9] * a[3] * a[16] + a[9] * a[4] * a[15] +
+		a[13] * a[3] * a[12] - a[13] * a[4] * a[11]
+	tm4[7]    = -a[1] * a[7] * a[16] + a[1] * a[8] * a[15] + a[5] * a[3] * a[16] - a[5] * a[4] * a[15] -
+		a[13] * a[3] * a[8] + a[13] * a[4] * a[7]
+	tm4[8]    = a[1] * a[7] * a[12] - a[1] * a[8] * a[11] - a[5] * a[3] * a[12] + a[5] * a[4] * a[11] +
+		a[9] * a[3] * a[8] - a[9] * a[4] * a[7]
+	tm4[9]    = a[5] * a[10] * a[16] - a[5] * a[12] * a[14] - a[9] * a[6] * a[16] + a[9] * a[8] * a[14] +
+		a[13] * a[6] * a[12] - a[13] * a[8] * a[10]
+	tm4[10]   = -a[1] * a[10] * a[16] + a[1] * a[12] * a[14] + a[9] * a[2] * a[16] - a[9] * a[4] * a[14] -
+		a[13] * a[2] * a[12] + a[13] * a[4] * a[10]
+	tm4[11]   = a[1] * a[6] * a[16] - a[1] * a[8] * a[14] - a[5] * a[2] * a[16] + a[5] * a[4] * a[14] +
+		a[13] * a[2] * a[8] - a[13] * a[4] * a[6]
+	tm4[12]   = -a[1] * a[6] * a[12] + a[1] * a[8] * a[10] + a[5] * a[2] * a[12] - a[5] * a[4] * a[10] -
+		a[9] * a[2] * a[8] + a[9] * a[4] * a[6]
+	tm4[13]   = -a[5] * a[10] * a[15] + a[5] * a[11] * a[14] + a[9] * a[6] * a[15] - a[9] * a[7] * a[14] -
+		a[13] * a[6] * a[11] + a[13] * a[7] * a[10]
+	tm4[14]   = a[1] * a[10] * a[15] - a[1] * a[11] * a[14] - a[9] * a[2] * a[15] + a[9] * a[3] * a[14] +
+		a[13] * a[2] * a[11] - a[13] * a[3] * a[10]
+	tm4[15]   = -a[1] * a[6] * a[15] + a[1] * a[7] * a[14] + a[5] * a[2] * a[15] - a[5] * a[3] * a[14] -
+		a[13] * a[2] * a[7] + a[13] * a[3] * a[6]
+	tm4[16]   = a[1] * a[6] * a[11] - a[1] * a[7] * a[10] - a[5] * a[2] * a[11] + a[5] * a[3] * a[10] +
+		a[9] * a[2] * a[7] - a[9] * a[3] * a[6]
+
+	local det = a[1] * tm4[1] + a[2] * tm4[5] + a[3] * tm4[9] + a[4] * tm4[13]
+
+	if det == 0 then return a end
+
+	det = 1 / det
+
+	for i = 1, 16 do
+		self[i] = tm4[i] * det
+	end
+
+	return self
+end
+
+function mat4x4:tostring()
+	return ("%+7.3f"):rep(4, " "):rep(4, "\n"):format(unpack(self))
+end
+
+-- local ta = mat4x4:new()
+-- local tb = mat4x4:new()
+-- for i=1,16 do
+-- 	ta[i] = math.random()
+-- 	tb[i] = math.random()
+-- end
+
+-- print("A=")
+-- print(ta:tostring())
+-- print("B=")
+-- print(tb:tostring())
+-- print("A*B=")
+-- print(ta:multiply(tb):tostring())
+-- print()
 
 return mat4x4
