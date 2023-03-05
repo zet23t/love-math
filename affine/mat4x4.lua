@@ -47,11 +47,6 @@ function mat4x4:get_z(s)
 	return self[3] * s, self[7] * s, self[11] * s
 end
 
-function mat4x4:set_z(x,y,z)
-	self[3], self[7], self[11] = x, y, z
-	return self
-end
-
 function mat4x4:set_x(x,y,z)
 	self[1], self[5], self[9] = x, y, z
 	return self
@@ -59,6 +54,26 @@ end
 
 function mat4x4:set_y(x,y,z)
 	self[2], self[6], self[10] = x, y, z
+	return self
+end
+
+function mat4x4:set_z(x,y,z)
+	self[3], self[7], self[11] = x, y, z
+	return self
+end
+
+function mat4x4:set_row_x(x,y,z)
+	self[1], self[2], self[3] = x, y, z
+	return self
+end
+
+function mat4x4:set_row_y(x,y,z)
+	self[5], self[6], self[7] = x, y, z
+	return self
+end
+
+function mat4x4:set_row_z(x,y,z)
+	self[9], self[10], self[11] = x, y, z
 	return self
 end
 
