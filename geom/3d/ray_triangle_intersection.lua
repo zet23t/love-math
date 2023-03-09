@@ -34,7 +34,7 @@ return function(backface_cull, ray_x, ray_y, ray_z, dir_x, dir_y, dir_z, ax, ay,
 	local hx, hy, hz = cross(dir_x, dir_y, dir_z, cx, cy, cz)
 	local a          = dot(hx, hy, hz, bx, by, bz)
 
-	if backface_cull and a < 0 then
+	if backface_cull and a > 0 then
 		return
 	end
 
@@ -59,7 +59,7 @@ return function(backface_cull, ray_x, ray_y, ray_z, dir_x, dir_y, dir_z, ax, ay,
 	local t = dot(qx, qy, qz, cx, cy, cz) * f
 
 	if t >= 0.0000001 then
-		local nx, ny, nz = cross(bx, by, bz, cx, cy, cz)
+		local nx, ny, nz = cross(cx, cy, cz, bx, by, bz)
 		return ray_x + dir_x * t, ray_y + dir_y * t, ray_z + dir_z * t, nx, ny, nz
 	end
 end
