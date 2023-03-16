@@ -3,6 +3,7 @@ local clamp        = require "love-math.clamp"
 local vector_angle = require "love-math.geom.3d.vector_angle"
 local normalize3d  = require "love-math.geom.3d.normalize3d"
 local format_nums  = require "love-util.format_nums"
+local distance_squared = require "love-math.geom.3d.distance_squared"
 
 ---@class spline : object a bezier spline with some useful additional functions
 ---@field points table[]
@@ -41,6 +42,13 @@ local function swap_args(swap_count, ...)
 	return select(swap_count, ...), swap_args(swap_count + 1, ...)
 end
 
+local px,py,pz
+local function trigger_call(callback, x,y,z,tx,ty,tz)
+	if x == px and y == py and z == pz then return end
+	px,py,pz = x,y,z
+	return callback(x,y,z,tx,ty,tz)
+end
+
 local function subdiv_by_max_angle(spline, max_angle, callback, n, segment, 
 								   at, ax, ay, az, atx, aty, atz, 
 								   ct, cx, cy, cz, ctx, cty, ctz, ...)
@@ -57,18 +65,19 @@ local function subdiv_by_max_angle(spline, max_angle, callback, n, segment,
 			bt, bx, by, bz, btx, bty, btz, 
 			ct, cx, cy, cz, ctx, cty, ctz, ...)
 	else
-		result = callback(swap_args(7, ax, ay, az, atx, aty, atz, ...))
+		result = trigger_call(callback,swap_args(7, ax, ay, az, atx, aty, atz, ...))
 		if result then return result end
 		if vang > 0.05 then
-			result = callback(swap_args(7, bx, by, bz, btx, bty, btz, ...))
+			result = trigger_call(callback,swap_args(7, bx, by, bz, btx, bty, btz, ...))
 			if result then return result end
 		end
-		result = callback(swap_args(7, cx, cy, cz, ctx, cty, ctz, ...))
+		result = trigger_call(callback,swap_args(7, cx, cy, cz, ctx, cty, ctz, ...))
 		return result
 	end
 end
 
 function spline:subdivide_by_max_angle(max_angle, callback)
+	px,py,pz = nil,nil,nil
 	for i = 1, #self.points - 1 do
 		local p1 = self.points[i]
 		local p2 = self.points[i + 1]
@@ -78,10 +87,10 @@ function spline:subdivide_by_max_angle(max_angle, callback)
 		local t2x, t2y, t2z = unpack(p2.t_in)
 		local result
 		if t1x == 0 and t1y == 0 and t1z == 0 and t2x == 0 and t2y == 0 and t2z == 0 then
-			result = callback(x1, y1, z1, x2 - x1, y2 - y1, z2 - z1)
+			result = trigger_call(callback,x1, y1, z1, x2 - x1, y2 - y1, z2 - z1)
 			if result then return result end
 			if i == #self.points - 1 then
-				result = callback(x2, y2, z2, x2 - x1, y2 - y1, z2 - z1)
+				result = trigger_call(callback,x2, y2, z2, x2 - x1, y2 - y1, z2 - z1)
 				if result then return result end
 			end
 		else
@@ -144,12 +153,46 @@ local function calc_point_at_distance(x, y, z, tx, ty, tz)
 	px, py, pz = x, y, z
 	ptx, pty, ptz = tx, ty, tz
 end
+
+---@param distance number
+---@param max_angle number
+---@return number x
+---@return number y
+---@return number z
+---@return number tangent_x
+---@return number tangent_y
+---@return number tangent_z
 function spline:calc_point_at_distance(distance, max_angle)
 	max_angle = max_angle or 15 * math.pi / 180
 	remaining_length = distance
 	px = nil
 	self:subdivide_by_max_angle(max_angle, calc_point_at_distance)
 	return px, py, pz, ptx, pty, ptz
+end
+
+local px,py,pz,seek_z
+local function find_value_by_z(x,y,z)
+	if px and pz <= seek_z and seek_z <= z then
+		local t = (seek_z - pz) / (z - pz)
+		px,py,pz = lerp(t,px,py,pz,x,y,z)
+		return true
+	end
+	px,py,pz = x,y,z
+end
+
+---Finds the x,y,z values of a spline at coordinate z; Assumes that the spline is linearly going along
+---the z direction. The purpose of this function is to be used for splines that describe f(x) math 
+---functions; for instance when determining the scaling of an object during an animation.
+---@param z number
+---@param max_angle number
+---@return number
+---@return number
+---@return number
+function spline:find_value_by_z(z, max_angle)
+	px,py,pz = nil,nil,nil
+	seek_z = z
+	self:subdivide_by_max_angle(max_angle, find_value_by_z)
+	return px,py,pz
 end
 
 ---Calculates a point for a specified segment and the interpolation poitn t
