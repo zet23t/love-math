@@ -100,6 +100,8 @@ function loft_mesh_generator:generate(mesh_builder)
 			 scale_x, scale_y = self.scaling_spline:find_value_by_z(v, self.max_spline_angle)
 		end
 
+		-- draw_debug_arrow(0,0,0,x1,y1,z1,x2,y2,z2,5)
+
 		-- construct a matrix to translate the position of the hull into local coordinates of the
 		-- point we're along the path
 		m_tmp:set_position(x2, y2, z2)
@@ -145,6 +147,8 @@ function loft_mesh_generator:generate(mesh_builder)
 		-- update the up vector (which is perpendicular to the current path position) to avoid flips
 		upx, upy, upz = ux, uy, uz
 	end
+
+	return mesh_builder
 end
 
 function loft_mesh_generator:set_vertice(mesh_builder, id, x, y, z, u, v, nx, ny, nz)
