@@ -130,7 +130,7 @@ function mesh_builder:create_mesh()
 		attribute_color_index = #attributes
 	end
 
-	local mesh = love.graphics.newMesh(attributes, #self.vertices, "triangles", "static")
+	local mesh = love.graphics.newMesh(attributes, math.max(1, #self.vertices), "triangles", "static")
 	setVertexAttribute(mesh, vertice_count, 1, self.vertice_size, self.vertices)
 	setVertexAttribute(mesh, vertice_count, attribute_normal_index, self.normal_size, self.normals)
 	setVertexAttribute(mesh, vertice_count, attribute_uv_index, self.uv_size, self.uvs)

@@ -63,7 +63,10 @@ local m_tmp2 = mat4x4:new()
 function loft_mesh_generator:generate(mesh_builder)
 	local hull_points, hull_tangents, hull_uv = spline_to_points(self.hull_spline, self.max_spline_angle)
 	local path_points, path_tangents, path_uv = spline_to_points(self.path_spline, self.max_spline_angle)
-	
+	if #path_points < 6 then
+		print("Path spline should have > 1 point")
+		return mesh_builder
+	end
 	local ring_points = {}
 	local prev_ring_points
 	-- initial up vector to use - gets modified while sweeping along the path to avoid flipping directions
