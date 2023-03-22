@@ -1,3 +1,4 @@
+local normalize3d = require "love-math.geom.3d.normalize3d"
 ---@class mat4x4 A 4x4 matrix for affine transformations
 local mat4x4 = {}
 mat4x4._mt = { __index = mat4x4 }
@@ -47,32 +48,32 @@ function mat4x4:get_z(s)
 	return self[3] * s, self[7] * s, self[11] * s
 end
 
-function mat4x4:set_x(x,y,z)
+function mat4x4:set_x(x, y, z)
 	self[1], self[5], self[9] = x, y, z
 	return self
 end
 
-function mat4x4:set_y(x,y,z)
+function mat4x4:set_y(x, y, z)
 	self[2], self[6], self[10] = x, y, z
 	return self
 end
 
-function mat4x4:set_z(x,y,z)
+function mat4x4:set_z(x, y, z)
 	self[3], self[7], self[11] = x, y, z
 	return self
 end
 
-function mat4x4:set_row_x(x,y,z)
+function mat4x4:set_row_x(x, y, z)
 	self[1], self[2], self[3] = x, y, z
 	return self
 end
 
-function mat4x4:set_row_y(x,y,z)
+function mat4x4:set_row_y(x, y, z)
 	self[5], self[6], self[7] = x, y, z
 	return self
 end
 
-function mat4x4:set_row_z(x,y,z)
+function mat4x4:set_row_z(x, y, z)
 	self[9], self[10], self[11] = x, y, z
 	return self
 end
@@ -141,13 +142,20 @@ function mat4x4:set_position(x, y, z)
 	return self
 end
 
+function mat4x4:set_object_scale(x, y, z)
+	self[1], self[5], self[9] = normalize3d(self[1], self[5], self[9], x)
+	self[2], self[6], self[10] = normalize3d(self[2], self[6], self[10], y or x)
+	self[3], self[7], self[11] = normalize3d(self[3], self[7], self[11], z or y or x)
+	return self
+end
+
 function mat4x4:scale(x, y, z)
-	self[1], self[2], self[3], self[4],
-	self[5], self[6], self[7], self[8],
-	self[9], self[10], self[11], self[12] =
-		self[1] * x, self[2] * x, self[3] * x, self[4] * x,
-		self[5] * y, self[6] * y, self[7] * y, self[8] * y,
-		self[9] * z, self[10] * z, self[11] * z, self[12] * z
+	self[1], self[5], self[9],
+	self[2], self[6], self[10],
+	self[3], self[7], self[11] =
+		self[1] * x, self[5] * y, self[9] * z,
+		self[2] * x, self[6] * y, self[10] * z,
+		self[3] * x, self[7] * y, self[11] * z
 	return self
 end
 
