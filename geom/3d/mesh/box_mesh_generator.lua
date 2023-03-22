@@ -60,6 +60,7 @@ function box_mesh_generator:generate(mesh_builder)
 		mesh_builder:set_uv(a, 1, 1):set_uv(b, 1, 0):set_uv(c, 0, 0):set_uv(d, 0, 1)
 		mesh_builder:add_triangles(a, b, c, a, c, d)
 	end
+	return mesh_builder
 end
 
 return box_mesh_generator
