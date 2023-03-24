@@ -195,7 +195,7 @@ end
 
 local px, py, pz, seek_z
 local function find_value_by_z(x, y, z)
-	if px and pz <= seek_z and seek_z <= z then
+	if px and pz <= seek_z and seek_z <= z and z ~= pz then
 		local t = (seek_z - pz) / (z - pz)
 		px, py, pz = lerp3d(t, px, py, pz, x, y, z)
 		return true
