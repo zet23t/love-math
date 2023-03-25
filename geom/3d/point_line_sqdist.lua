@@ -10,9 +10,11 @@ return function(x, y, z, x1, y1, z1, x2, y2, z2)
 	local len_sq = dx2 * dx2 + dy2 * dy2 + dz2 * dz2
 	local param = -1
 	if len_sq == 0 then
-		return
+		return dx1 * dx1 + dy1 * dy1 + dz1 * dz1, x1, y1, z1
 	end
-	
+
+	param = dot / len_sq;
+
 	local xx, yy, zz
 
 	xx = x1 + param * dx2
