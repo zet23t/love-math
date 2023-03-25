@@ -41,9 +41,9 @@ function spline:append_arc(x, y, z, rx, ry, rz, ux, uy, uz, radian_start, radian
 		local ang = lerp(i / divisions, radian_start, radian_end)
 		local c, s = math.cos(ang), math.sin(ang)
 		local px, py, pz =
-			s * rx + c * ux,
-			s * ry + c * uy,
-			s * rz + c * uz
+			s * rx + c * ux + x,
+			s * ry + c * uy + y,
+			s * rz + c * uz + z
 		self:add_point(px, py, pz)
 	end
 	return self
@@ -66,10 +66,10 @@ local function swap_args(swap_count, ...)
 end
 
 local px, py, pz
-local function trigger_call(callback, x, y, z, tx, ty, tz)
+local function trigger_call(callback, x, y, z, tx, ty, tz, ...)
 	if x == px and y == py and z == pz then return end
 	px, py, pz = x, y, z
-	return callback(x, y, z, tx, ty, tz)
+	return callback(x, y, z, tx, ty, tz, ...)
 end
 
 local function subdiv_by_max_angle(spline, max_angle, callback, n, segment,
@@ -99,7 +99,7 @@ local function subdiv_by_max_angle(spline, max_angle, callback, n, segment,
 	end
 end
 
-function spline:subdivide_by_max_angle(max_angle, callback)
+function spline:subdivide_by_max_angle(max_angle, callback, ...)
 	px, py, pz = nil, nil, nil
 	for i = 1, #self.points - 1 do
 		local p1 = self.points[i]
@@ -110,10 +110,10 @@ function spline:subdivide_by_max_angle(max_angle, callback)
 		local t2x, t2y, t2z = unpack(p2.t_in)
 		local result
 		if t1x == 0 and t1y == 0 and t1z == 0 and t2x == 0 and t2y == 0 and t2z == 0 then
-			result = trigger_call(callback, x1, y1, z1, x2 - x1, y2 - y1, z2 - z1)
+			result = trigger_call(callback, x1, y1, z1, x2 - x1, y2 - y1, z2 - z1, ...)
 			if result then return result end
 			if i == #self.points - 1 then
-				result = trigger_call(callback, x2, y2, z2, x2 - x1, y2 - y1, z2 - z1)
+				result = trigger_call(callback, x2, y2, z2, x2 - x1, y2 - y1, z2 - z1, ...)
 				if result then return result end
 			end
 		else
@@ -125,20 +125,19 @@ function spline:subdivide_by_max_angle(max_angle, callback)
 	end
 end
 
-local px, py, pz, line_width_2, red, green, blue
-local function draw_step(x, y, z)
+local px, py, pz
+local function draw_step(x, y, z, tx, ty, tz, callback, ...)
 	if px then
-		draw_debug_arrow(red, green, blue, px, py, pz, x, y, z, line_width_2)
+		-- draw_debug_arrow(red, green, blue, px, py, pz, x, y, z, line_width_2)
+		callback(px, py, pz, x, y, z, ...)
 	end
 	px, py, pz = x, y, z
 end
 
-function spline:draw_debug(r, g, b, line_width, max_angle)
+function spline:for_each_line(callback, max_angle, ...)
 	max_angle = max_angle or 5 / 180 * math.pi
 	px = nil
-	red, green, blue = r, g, b
-	line_width_2 = line_width
-	self:subdivide_by_max_angle(max_angle, draw_step)
+	self:subdivide_by_max_angle(max_angle, draw_step, callback, ...)
 end
 
 local len_sum, px, py, pz
@@ -178,7 +177,7 @@ local function calc_point_at_distance(x, y, z, tx, ty, tz)
 end
 
 ---@param distance number
----@param max_angle number
+---@param max_angle number|nil
 ---@return number x
 ---@return number y
 ---@return number z
