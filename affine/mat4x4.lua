@@ -1,4 +1,5 @@
 local normalize3d = require "love-math.geom.3d.normalize3d"
+local length3d    = require "love-math.geom.3d.length3d"
 ---@class mat4x4 A 4x4 matrix for affine transformations
 local mat4x4 = {}
 mat4x4._mt = { __index = mat4x4 }
@@ -147,6 +148,12 @@ function mat4x4:set_object_scale(x, y, z)
 	self[2], self[6], self[10] = normalize3d(self[2], self[6], self[10], y or x)
 	self[3], self[7], self[11] = normalize3d(self[3], self[7], self[11], z or y or x)
 	return self
+end
+
+function mat4x4:get_object_scale()
+	return length3d(self[1], self[5], self[9]),
+		length3d(self[2], self[6], self[10]),
+		length3d(self[3], self[7], self[11])
 end
 
 function mat4x4:scale(x, y, z)
