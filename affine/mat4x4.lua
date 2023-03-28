@@ -232,6 +232,23 @@ function mat4x4:perspective(fov, aspect, near, far)
 	return self
 end
 
+function mat4x4:is_identical(mat)
+	for i=1,16 do
+		if self[i] ~= mat[i] then return false end
+	end
+	return true
+end
+
+function mat4x4:equals(mat, max_delta)
+	for i=1,16 do
+		local d = self[i] - mat[i]
+		if d > max_delta or d < -max_delta then
+			return false
+		end
+	end
+	return true
+end
+
 function mat4x4:multiply(a)
 	local b = self
 	self[1], self[2], self[3], self[4],
