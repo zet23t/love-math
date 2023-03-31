@@ -70,6 +70,11 @@ function mat4x4:set_column(column, x,y,z,w)
 	return self
 end
 
+function mat4x4:get_column(column)
+	local o = column
+	return self[o], self[o + 4], self[o + 8], self[o + 12]
+end
+
 function mat4x4:set_row_x(x, y, z)
 	self[1], self[2], self[3] = x, y, z
 	return self
