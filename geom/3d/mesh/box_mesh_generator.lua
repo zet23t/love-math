@@ -42,6 +42,7 @@ function box_mesh_generator:generate(mesh_builder)
 	local x, y, z = unpack(self.position)
 	local sx, sy, sz = unpack(self.size)
 	local ex, ey, ez = sx * .5, sy * .5, sz * .5
+	x,y,z = x / sx, y / sy, z / sz
 	m_tmp2:identity():scale(ex,ey,ez)
 	for i = 1, #box_axis, 3 do
 		local a, b, c, d = mesh_builder:allocate_vertices(4)
