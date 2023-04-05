@@ -134,6 +134,17 @@ function mat4x4:copy(m)
 	return self
 end
 
+function mat4x4:get_value(x, y)
+	return self[x + (y - 1) * 4]
+end
+
+function mat4x4:set_values(...)
+	for i=1,select('#', ...) do
+		self[i] = select(i, ...)
+	end
+	return self
+end
+
 function mat4x4:translate(x, y, z)
 	x = x or 0
 	y = y or x
