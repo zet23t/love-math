@@ -36,17 +36,17 @@ end
 
 function mat4x4:get_x(s)
 	s = s or 1
-	return self[1] * s, self[5] * s, self[9] * s
+	return self[1] * s, self[5] * s, self[9] * s, self[13]
 end
 
 function mat4x4:get_y(s)
 	s = s or 1
-	return self[2] * s, self[6] * s, self[10] * s
+	return self[2] * s, self[6] * s, self[10] * s, self[14]
 end
 
 function mat4x4:get_z(s)
 	s = s or 1
-	return self[3] * s, self[7] * s, self[11] * s
+	return self[3] * s, self[7] * s, self[11] * s, self[15]
 end
 
 function mat4x4:set_x(x, y, z)
@@ -70,9 +70,10 @@ function mat4x4:set_column(column, x,y,z,w)
 	return self
 end
 
-function mat4x4:get_column(column)
+function mat4x4:get_column(column, mul)
 	local o = column
-	return self[o], self[o + 4], self[o + 8], self[o + 12]
+	mul = mul or 1
+	return self[o] * mul, self[o + 4] * mul, self[o + 8] * mul, self[o + 12] * mul
 end
 
 function mat4x4:set_row_x(x, y, z)
@@ -107,7 +108,7 @@ end
 
 function mat4x4:get_position(s)
 	s = s or 1
-	return self[4] * s, self[8] * s, self[12] * s
+	return self[4] * s, self[8] * s, self[12] * s, self[16]
 end
 
 function mat4x4:transpose()
