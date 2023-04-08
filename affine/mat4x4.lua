@@ -1,8 +1,9 @@
 local normalize3d = require "love-math.geom.3d.normalize3d"
 local length3d    = require "love-math.geom.3d.length3d"
+local cross       = require "love-math.geom.3d.cross"
 ---@class mat4x4 A 4x4 matrix for affine transformations
-local mat4x4 = {}
-mat4x4._mt = { __index = mat4x4 }
+local mat4x4      = {}
+mat4x4._mt        = { __index = mat4x4 }
 
 ---@return mat4x4
 function mat4x4:new()
@@ -64,9 +65,9 @@ function mat4x4:set_z(x, y, z)
 	return self
 end
 
-function mat4x4:set_column(column, x,y,z,w)
+function mat4x4:set_column(column, x, y, z, w)
 	local o = column
-	self[o], self[o + 4], self[o + 8], self[o + 12] = x,y,z, self[o + 12] or w
+	self[o], self[o + 4], self[o + 8], self[o + 12] = x, y, z, self[o + 12] or w
 	return self
 end
 
@@ -140,7 +141,7 @@ function mat4x4:get_value(x, y)
 end
 
 function mat4x4:set_values(...)
-	for i=1,select('#', ...) do
+	for i = 1, select('#', ...) do
 		self[i] = select(i, ...)
 	end
 	return self
@@ -202,6 +203,14 @@ function mat4x4:rotate_axis(radians, ax, ay, az)
 	return self
 end
 
+function mat4x4:look_at(fx, fy, fz, tx, ty, tz, ux, uy, uz)
+	ux, uy, uz = ux or 0, uy or 1, uz or 0
+	local zx, zy, zz = normalize3d(tx - fx, ty - fy, tz - tz)
+	local xx, xy, xz = normalize3d(cross(zx, zy, zz, ux, uy, uz))
+	local yx, yy, yz = cross(xx, xy, xz, zx, zy, zz)
+	return self:set_x(xx, xy, xz):set_y(yx, yy, yz):set_z(zx, zy, zz):set_position(fx, fy, fz)
+end
+
 function mat4x4:set_rotate_axis(radians, ax, ay, az)
 	local s, c = math.sin(radians), math.cos(radians)
 	local invc = 1.0 - c
@@ -256,14 +265,14 @@ function mat4x4:perspective(fov, aspect, near, far)
 end
 
 function mat4x4:is_identical(mat)
-	for i=1,16 do
+	for i = 1, 16 do
 		if self[i] ~= mat[i] then return false end
 	end
 	return true
 end
 
 function mat4x4:equals(mat, max_delta)
-	for i=1,16 do
+	for i = 1, 16 do
 		local d = self[i] - mat[i]
 		if d > max_delta or d < -max_delta then
 			return false
