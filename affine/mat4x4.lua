@@ -1,6 +1,7 @@
 local normalize3d = require "love-math.geom.3d.normalize3d"
 local length3d    = require "love-math.geom.3d.length3d"
 local cross       = require "love-math.geom.3d.cross"
+local format_nums = require "love-util.format_nums"
 ---@class mat4x4 A 4x4 matrix for affine transformations
 local mat4x4      = {}
 mat4x4._mt        = { __index = mat4x4 }
@@ -205,10 +206,23 @@ end
 
 function mat4x4:look_at(fx, fy, fz, tx, ty, tz, ux, uy, uz)
 	ux, uy, uz = ux or 0, uy or 1, uz or 0
-	local zx, zy, zz = normalize3d(tx - fx, ty - fy, tz - tz)
+	local zx, zy, zz = normalize3d(tx - fx, ty - fy, tz - fz)
 	local xx, xy, xz = normalize3d(cross(zx, zy, zz, ux, uy, uz))
 	local yx, yy, yz = cross(xx, xy, xz, zx, zy, zz)
 	return self:set_x(xx, xy, xz):set_y(yx, yy, yz):set_z(zx, zy, zz):set_position(fx, fy, fz)
+end
+
+function mat4x4:add(mul, mat)
+	for i=1,16 do 
+		self[i] = self[i] + mat[i] * mul
+	end
+	return self
+end
+
+function mat4x4:calc_abs_sum()
+	local sum = 0
+	for i=1,16 do sum = sum + math.abs(self[i]) end
+	return sum
 end
 
 function mat4x4:set_rotate_axis(radians, ax, ay, az)
