@@ -36,9 +36,11 @@ local function unpack_number_range(list, from, to)
 end
 
 local function setVertexAttribute(mesh, vertice_count, attribute_index, data_size, data)
-	for i = 1, vertice_count do
-		mesh:setVertexAttribute(i, attribute_index,
-			unpack_number_range(data, (i - 1) * data_size + 1, i * data_size))
+	if attribute_index then
+		for i = 1, vertice_count do
+			mesh:setVertexAttribute(i, attribute_index,
+				unpack_number_range(data, (i - 1) * data_size + 1, i * data_size))
+		end
 	end
 end
 
@@ -135,7 +137,7 @@ local function to_zero(x)
 end
 
 local function cut_bits(x, y, z)
-	x,y,z = to_zero(x), to_zero(y), to_zero(z)
+	x, y, z = to_zero(x), to_zero(y), to_zero(z)
 	return math.floor(x * 0x10000), math.floor(y * 0x10000), math.floor(z * 0x10000)
 end
 
@@ -208,7 +210,7 @@ function mesh_builder:recalculate_normals(max_angle_radians)
 end
 
 function mesh_builder:optimize()
-	-- TODO: 
+	-- TODO:
 	-- - delete vertices not used by triangles
 	-- - merge vertices with nearly same position / uv / color / normal
 	return self
