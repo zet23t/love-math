@@ -347,8 +347,8 @@ function mat4x4:multiply_left(b)
 	return self
 end
 
-function mat4x4:multiply_point(x, y, z)
-	local w = self[13] * x + self[14] * y + self[15] * z + self[16]
+function mat4x4:multiply_point(x, y, z, w)
+	local w = self[13] * x + self[14] * y + self[15] * z + self[16] * (w or 1)
 	return (x * self[1] + y * self[2] + z * self[3] + self[4]),
 		(x * self[5] + y * self[6] + z * self[7] + self[8]),
 		(x * self[9] + y * self[10] + z * self[11] + self[12]),
