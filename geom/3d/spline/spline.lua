@@ -23,11 +23,16 @@ end
 ---@param in_tx number|nil incoming tangent, defaults to 0
 ---@param in_ty number|nil incoming tangent, defaults to 0
 ---@param in_tz number|nil incoming tangent, defaults to 0
----@param out_tx number|nil outgoing tangent, default to 0
+---@param out_tx number|nil outgoing tangent, default to 0 - if defined but out_ty and out_tz is nil, out_tx, out_ty
+--- 						and out_tz are configured to mirror the incoming tangent using out_tx as length multiplier
 ---@param out_ty number|nil outgoing tangent, default to 0
 ---@param out_tz number|nil outgoing tangent, default to 0
 ---@return spline
 function spline:add_point(x, y, z, in_tx, in_ty, in_tz, out_tx, out_ty, out_tz)
+	if in_tx and in_ty and in_tz and out_tx and not out_ty and not out_tz then
+		local len_mul = -out_tx
+		out_tx, out_ty, out_tz = in_tx * len_mul, in_ty * len_mul, in_tz * len_mul
+	end
 	self.points[#self.points + 1] = {
 		pos = { x, y, z },
 		t_out = { out_tx or 0, out_ty or 0, out_tz or 0 },
@@ -58,18 +63,27 @@ function spline:append_rect(cx, cy, cz, rx, ry, rz, ux, uy, uz)
 	return self
 end
 
-local function swap_args(swap_count, ...)
-	if swap_count > select('#', ...) then
-		return ...
+local function select_range(i, n,...)
+	if i < n then
+		return select(i,...), select_range(i + 1, n, ...)
 	end
-	return select(swap_count, ...), swap_args(swap_count + 1, ...)
+end
+local function swap_args_(swap_count, first,n, ...)
+	if swap_count > n then
+		return select_range(1, first,...)
+	end
+	return select(swap_count, ...), swap_args_(swap_count + 1, first, n, ...)
+end
+
+local function swap_args(swap_count, ...)
+	return swap_args_(swap_count, swap_count, select('#',...),...)
 end
 
 local px, py, pz
 local function trigger_call(callback, x, y, z, tx, ty, tz, ...)
 	if x == px and y == py and z == pz then return end
 	px, py, pz = x, y, z
-	return callback(x, y, z, tx, ty, tz, ...)
+	return callback(swap_args(7,x, y, z, tx, ty, tz, ...))
 end
 
 local function subdiv_by_max_angle(spline, max_angle, callback, n, segment,
@@ -119,21 +133,26 @@ function spline:subdivide_by_max_angle(max_angle, callback, ...)
 		else
 			result = subdiv_by_max_angle(self, max_angle, callback, 1, i,
 				0, x1, y1, z1, t1x, t1y, t1z,
-				1, x2, y2, z2, -t2x, -t2y, -t2z)
+				1, x2, y2, z2, -t2x, -t2y, -t2z,...)
 			if result then return result end
 		end
 	end
 end
 
-local px, py, pz
-local function draw_step(x, y, z, tx, ty, tz, callback, ...)
+local px, py, pz, ptx, pty, ptz
+local function draw_step(callback, x, y, z, tx, ty, tz, ...)
 	if px then
+		
 		-- draw_debug_arrow(red, green, blue, px, py, pz, x, y, z, line_width_2)
-		callback(px, py, pz, x, y, z, ...)
+		callback(px, py, pz, x, y, z, ptx, pty, ptz, tx, ty, tz, ...)
 	end
 	px, py, pz = x, y, z
+	ptx, pty, ptz = tx, ty, tz
 end
 
+---@param callback fun(x1:number,y1:number,z1:number,x2:number,y2:number,z2:number,tx1:number,ty1:number,tz1:number,tx2:number,ty2:number,tz2:number, ...)
+---@param max_angle number | nil defaults to 5, degrees
+---@param ... any parameters for the callback
 function spline:for_each_line(callback, max_angle, ...)
 	max_angle = max_angle or 5 / 180 * math.pi
 	px = nil
