@@ -204,6 +204,15 @@ function mat4x4:rotate_axis(radians, ax, ay, az)
 	return self
 end
 
+function mat4x4:calc_squared_differences(m)
+	local sum = 0
+	for i=1,16 do
+		local d = self[i] - m[i]
+		sum = sum + d * d
+	end
+	return sum
+end
+
 function mat4x4:look_at(fx, fy, fz, tx, ty, tz, ux, uy, uz)
 	ux, uy, uz = ux or 0, uy or 1, uz or 0
 	local zx, zy, zz = normalize3d(tx - fx, ty - fy, tz - fz)
