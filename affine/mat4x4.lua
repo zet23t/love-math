@@ -2,6 +2,8 @@ local normalize3d = require "love-math.geom.3d.normalize3d"
 local length3d    = require "love-math.geom.3d.length3d"
 local cross       = require "love-math.geom.3d.cross"
 local format_nums = require "love-util.format_nums"
+local lerp        = require "love-math.lerp"
+local dot3d       = require "love-math.geom.3d.dot3d"
 ---@class mat4x4 A 4x4 matrix for affine transformations
 local mat4x4      = {}
 mat4x4._mt        = { __index = mat4x4 }
@@ -189,6 +191,42 @@ function mat4x4:scale(x, y, z)
 		self[2] * x, self[6] * y, self[10] * z,
 		self[3] * x, self[7] * y, self[11] * z
 	return self
+end
+
+function mat4x4:lerp(to, t, renormalize)
+	local u = 1 - t
+	local lenx,leny,lenz
+	if renormalize then
+		lenx = length3d(self:get_x())
+		leny = length3d(self:get_y())
+		lenz = length3d(self:get_z())
+	end
+	for i=1,16 do
+		self[i] = self[i] * u + to[i] * t
+	end
+	if renormalize then
+		-- linearly interpolate the lengths and then try to restore orthogonality 
+		-- (assuming the source/target matrix has this property)
+		local to_lenx = length3d(t:get_x())
+		local to_leny = length3d(t:get_y())
+		local to_lenz = length3d(t:get_z())
+		local lx,ly,lz = lerp(t, lenx, to_lenx, leny, to_leny,lenz,to_lenz)
+		local xx,xy,xz = self:get_x()
+		local yx,yy,yz = self:get_y()
+		local zx,zy,zz = self:get_z()
+		local fx,fy,fz = cross(xx,xy,xz,yx,yy,yz)
+		local dir = dot3d(fx,fy,fz, zx,zy,zz)
+		dir = dir < 0 and -1 or 1
+		zx,zy,zz = normalize3d(fx,fy,fz,dir * lz)
+		xx,xy,xz = normalize3d(xx,xy,xz,lx)
+		local ux,uy,uz = cross(xx,xy,xz,zx,zy,zz)
+		dir = dot3d(ux,uy,uz,yx,yy,yz)
+		dir = dir < 0 and -1 or 1
+		yx,yy,yz = normalize3d(yx,yy,yz,dir * ly)
+		self:set_x(xx,xy,xz)
+		self:set_y(yx,yy,yz)
+		self:set_z(zx,zy,zz)
+	end
 end
 
 function mat4x4:set_y_rot(radians)
@@ -422,8 +460,8 @@ function mat4x4:inverse()
 	return self
 end
 
-function mat4x4:tostring()
-	return ("%+7.3f"):rep(4, " "):rep(4, "\n"):format(unpack(self))
+function mat4x4:tostring(fmt)
+	return (fmt or "%+7.3f"):rep(4, " "):rep(4, "\n"):format(unpack(self))
 end
 
 -- local ta = mat4x4:new()
