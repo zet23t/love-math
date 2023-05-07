@@ -187,9 +187,16 @@ function mat4x4:scale(x, y, z)
 	self[1], self[5], self[9],
 	self[2], self[6], self[10],
 	self[3], self[7], self[11] =
-		self[1] * x, self[5] * y, self[9] * z,
-		self[2] * x, self[6] * y, self[10] * z,
-		self[3] * x, self[7] * y, self[11] * z
+		self[1] * x, self[5] * x, self[9] * x,
+		self[2] * y, self[6] * y, self[10] * y,
+		self[3] * z, self[7] * z, self[11] * z
+	return self
+end
+
+function mat4x4:normalize_rot()
+	self[1], self[5], self[9] = normalize3d(self[1], self[5], self[9])
+	self[2], self[6], self[10] = normalize3d(self[2], self[6], self[10])
+	self[3], self[7], self[11] = normalize3d(self[3], self[7], self[11])
 	return self
 end
 
