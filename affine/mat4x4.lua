@@ -214,9 +214,9 @@ function mat4x4:lerp(to, t, renormalize)
 	if renormalize then
 		-- linearly interpolate the lengths and then try to restore orthogonality 
 		-- (assuming the source/target matrix has this property)
-		local to_lenx = length3d(t:get_x())
-		local to_leny = length3d(t:get_y())
-		local to_lenz = length3d(t:get_z())
+		local to_lenx = length3d(to:get_x())
+		local to_leny = length3d(to:get_y())
+		local to_lenz = length3d(to:get_z())
 		local lx,ly,lz = lerp(t, lenx, to_lenx, leny, to_leny,lenz,to_lenz)
 		local xx,xy,xz = self:get_x()
 		local yx,yy,yz = self:get_y()

@@ -245,7 +245,7 @@ end
 ---@return number|nil tx direction tangent (can be 0)
 ---@return number|nil ty direction tangent (can be 0)
 ---@return number|nil tz direction tangent (can be 0)
-function spline:calc_point(segment, t, debug)
+function spline:calc_point(segment, t, draw_debug_arrow)
 	if #self.points == 0 then return end
 	if #self.points == 1 then
 		local x, y, z = unpack(self.points[1].pos)
@@ -280,7 +280,7 @@ function spline:calc_point(segment, t, debug)
 	local dx, dy, dz = lerp3d(t, ax, ay, az, bx, by, bz)
 	local ex, ey, ez = lerp3d(t, bx, by, bz, cx, cy, cz)
 	local x, y, z = lerp3d(t, dx, dy, dz, ex, ey, ez)
-	if debug then
+	if draw_debug_arrow then
 		draw_debug_arrow(0, 1, 0, x1, y1, z1, x1t, y1t, z1t, 5)
 		draw_debug_arrow(0, 1, 0, x1t, y1t, z1t, x2t, y2t, z2t, 5)
 		draw_debug_arrow(0, 1, 0, x2t, y2t, z2t, x2, y2, z2, 5)
