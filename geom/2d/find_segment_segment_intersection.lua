@@ -7,7 +7,7 @@
 ---@param y3 number
 ---@param x4 number
 ---@param y4 number
----@return boolean is_intersecting
+---@return boolean is_intersecting true if the segments intersects. If false, the x and y values are the point of intersection can still be returned, unless the lines are parallel.
 ---@return number|nil x optional point of intersection
 ---@return number|nil y optional point of intersection
 local function find_segment_segment_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
@@ -19,15 +19,16 @@ local function find_segment_segment_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
     return false
   end
   local t1 = (dx2 * dy3 - dy2 * dx3) / d
+  local ix, iy = x1 + t1 * dx1, y1 + t1 * dy1
   if t1 < 0 or t1 > 1 then
-    return false
+    return false, ix, iy
   end
   local t2 = (dx1 * dy3 - dy1 * dx3) / d
   if t2 < 0 or t2 > 1 then
-    return false
+    return false, ix, iy
   end
   -- point of intersection
-  return true, x1 + t1 * dx1, y1 + t1 * dy1
+  return true, ix, iy
 end
 
 return find_segment_segment_intersection
